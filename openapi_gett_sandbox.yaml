@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: Gett Ride Booking API (Sandbox)
+  version: "1.0.0"
+servers:
+  - url: https://api.sandbox.gett.com
+paths:
+  /v1/oauth/token:
+    post:
+      summary: Get OAuth2 Token
+      operationId: getToken
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                scope:
+                  type: string
+                grant_type:
+                  type: string
+              required: [client_id, client_secret, scope, grant_type]
+      responses:
+        '200':
+          description: Access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+
+  /v1/private/orders/create:
+    post:
+      summary: Create a new ride order
+      operationId: createOrder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_id:
+                    type: string
+                  status:
+                    type: string
+
+  /v1/private/orders/details/{order_id}:
+    get:
+      summary: Get order details
+      operationId: getOrderDetails
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partner_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  driver_name:
+                    type: string
+                  eta_minutes:
+                    type: integer
+
+  /v1/private/orders/cancel/{order_id}:
+    post:
+      summary: Cancel a ride order
+      operationId: cancelOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: partner_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order canceled
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    OrderRequest:
+      type: object
+      properties:
+        lc:
+          type: string
+        partner_id:
+          type: string
+        user_accepted_terms_and_privacy:
+          type: boolean
+        category:
+          type: string
+        product_id:
+          type: string
+        scheduled_at:
+          type: string
+          format: date-time
+        stops:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              actions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    user:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        phone:
+                          type: string
+              location:
+                type: object
+                properties:
+                  lat:
+                    type: number
+                  lng:
+                    type: number
+                  address:
+                    type: object
+        payment:
+          type: object
+          properties:
+            payment_type:
+              type: string
